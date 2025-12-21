@@ -1,0 +1,32 @@
+{
+    "restoreTerminals.terminals": [
+        {
+            "splitTerminals": [
+                {
+                    "name": "Git",
+                    "commands": [
+                        "git status"
+                    ]
+                }
+            ]
+        },
+        {
+            "splitTerminals": [
+                {
+                    "name": "Frontend",
+                    "commands": [
+                        "cd frontend",
+                        "npm run dev"
+                    ]
+                },
+                {
+                    "name": "Server",
+                    "commands": [
+                        "cd server",
+                        "nodemon -e rs -x \"cargo run\""
+                    ]
+                }
+            ]
+        }
+    ]
+}

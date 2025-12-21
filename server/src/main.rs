@@ -3,21 +3,32 @@ use std::{
     thread,
 };
 
-use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
+use axum::{Json, Router, extract::State, http::Method, response::IntoResponse, routing::get};
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().unwrap();
+
     // build our application with a single route
     let app = Router::new().route(
         "/api/cpus",
-        get(get_cpu).with_state(AppState {
-            sys: Arc::new(Mutex::new(System::new_all())),
-        }),
+        get(get_cpu)
+            .with_state(AppState {
+                sys: Arc::new(Mutex::new(System::new_all())),
+            })
+            .layer(
+                CorsLayer::new()
+                    .allow_origin(AllowOrigin::exact("http://localhost:5173".parse().unwrap()))
+                    .allow_methods([Method::GET])
+                    .allow_headers(Any),
+            ),
     );
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:7032")
+    let api_port = std::env::var("API_PORT").expect("API_PORT environment variable not set");
+    let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{}", api_port))
         .await
         .unwrap();
     axum::serve(listener, app).await.unwrap();
