@@ -27,7 +27,7 @@ const HomePage = () => {
     return (
         <div className="flex flex-col gap-2 pb-4 border-2 rounded-md w-max border-secondary">
             <header className="flex justify-between p-2 px-4 rounded-t-md bg-secondary">
-                <h1>CPU Usage</h1>
+                <h1>CPU Usages</h1>
                 <select
                     name="refreshRate"
                     id="refreshRateSelect"

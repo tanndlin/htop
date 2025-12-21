@@ -3,8 +3,9 @@ use std::{
     thread,
 };
 
-use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
+use axum::{Json, Router, extract::State, http::Method, response::IntoResponse, routing::get};
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
+use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
@@ -15,6 +16,17 @@ async fn main() {
             sys: Arc::new(Mutex::new(System::new_all())),
         }),
     );
+
+    let app = if cfg!(debug_assertions) {
+        app.layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods([Method::GET, Method::POST])
+                .allow_headers(Any),
+        )
+    } else {
+        app
+    };
 
     // run our app with hyper, listening globally on port 3000
     let api_port = std::env::var("API_PORT").expect("API_PORT environment variable not set");

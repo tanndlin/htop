@@ -19,6 +19,8 @@ services:
             - '3001:80'
         networks:
             - htop-network
+        environment:
+            - NODE_ENV=production
 
 networks:
     htop-network:
