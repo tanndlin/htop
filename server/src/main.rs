@@ -3,20 +3,13 @@ use std::{
     thread,
 };
 
-use axum::{
-    Json, Router,
-    extract::State,
-    response::{Html, IntoResponse},
-    routing::get,
-};
+use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().unwrap();
-
     // build our application with a single route
-    let app = Router::new().route("/", get(get_root)).route(
+    let app = Router::new().route(
         "/api/cpus",
         get(get_cpu).with_state(AppState {
             sys: Arc::new(Mutex::new(System::new_all())),
@@ -33,13 +26,6 @@ async fn main() {
 #[derive(Clone)]
 struct AppState {
     sys: Arc<Mutex<System>>,
-}
-
-async fn get_root() -> impl IntoResponse {
-    match std::env::var("MODE").as_deref() {
-        Ok("PRODUCTION") => Html(include_str!("index.html").to_string()),
-        _ => Html(tokio::fs::read_to_string("src/index.html").await.unwrap()),
-    }
 }
 
 #[axum::debug_handler]
