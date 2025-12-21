@@ -18,6 +18,7 @@ async fn main() {
 
     // run our app with hyper, listening globally on port 3000
     let api_port = std::env::var("API_PORT").expect("API_PORT environment variable not set");
+    println!("Server running on 0.0.0.0:{}", api_port);
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", api_port))
         .await
         .unwrap();

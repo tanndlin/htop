@@ -9,9 +9,17 @@ services:
         pid: 'host'
         volumes:
             - /proc:/host_proc:ro
+        networks:
+            - htop-network
 
     frontend:
         build: ./frontend
         container_name: frontend
         ports:
             - '3001:80'
+        networks:
+            - htop-network
+
+networks:
+    htop-network:
+        driver: bridge
