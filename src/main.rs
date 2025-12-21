@@ -3,7 +3,7 @@ use std::{
     thread,
 };
 
-use axum::{Router, extract::State, routing::get};
+use axum::{Json, Router, extract::State, response::IntoResponse, routing::get};
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
 
 #[tokio::main]
@@ -32,19 +32,14 @@ async fn get_root() -> String {
     "Hello, World!".to_string()
 }
 
-async fn get_cpu(State(state): State<AppState>) -> String {
-    use std::fmt::Write;
+#[axum::debug_handler]
+async fn get_cpu(State(state): State<AppState>) -> impl IntoResponse {
     let mut sys = state.sys.lock().unwrap();
 
     sys.refresh_cpu_all();
     thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
     sys.refresh_cpu_all();
 
-    let mut s = String::new();
-    for (i, cpu) in sys.cpus().iter().enumerate() {
-        let i = i + 1;
-        let usage = cpu.cpu_usage();
-        writeln!(&mut s, "CPU {i} {usage}%").unwrap();
-    }
-    s
+    let v: Vec<_> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
+    Json(v)
 }
