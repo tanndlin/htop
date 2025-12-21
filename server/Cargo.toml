@@ -1,5 +1,9 @@
+[[bin]]
+name = "htop-api"
+path = "src/main.rs"
+
 [package]
-name = "htop"
+name = "htop-api"
 version = "0.1.0"
 edition = "2024"
 

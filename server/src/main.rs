@@ -13,6 +13,8 @@ mod types;
 
 #[tokio::main]
 async fn main() {
+    println!("Starting server...");
+
     let sys = Arc::new(Mutex::new(System::new_all()));
 
     // build our application with a single route

@@ -1,7 +1,7 @@
 services:
     server:
         build: ./server
-        container_name: rust-api
+        container_name: api
         environment:
             - API_PORT=3000
         ports:
