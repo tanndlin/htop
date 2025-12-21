@@ -6,8 +6,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     base: '/',
     plugins: [react(), svgr()],
-    build: {
-        outDir: 'build'
+
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:7032', // Rust backend
+                changeOrigin: true
+            }
+        }
     },
     test: {
         globals: true,

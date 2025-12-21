@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { API_BASE_URL } from './env';
 
 export function fetchApi<T>(endpoint: string) {
     const [data, setData] = useState(null as T | null);
@@ -8,7 +7,7 @@ export function fetchApi<T>(endpoint: string) {
 
     const fetchData = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+            const response = await fetch(`/api/${endpoint}`);
             if (!response.ok) {
                 throw new Error(`Error: ${response.statusText}`);
             }
@@ -17,12 +16,15 @@ export function fetchApi<T>(endpoint: string) {
             setData(result);
         } catch (err) {
             setError('Failed to fetch data');
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    const refetch = fetchData;
+    const refetch = () => {
+        if (!error) fetchData();
+    };
 
     useEffect(() => {
         fetchData();

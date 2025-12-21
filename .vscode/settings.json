@@ -3,27 +3,15 @@
         {
             "splitTerminals": [
                 {
-                    "name": "Git",
+                    "name": "Docker",
                     "commands": [
-                        "git status"
-                    ]
-                }
-            ]
-        },
-        {
-            "splitTerminals": [
-                {
-                    "name": "Frontend",
-                    "commands": [
-                        "cd frontend",
-                        "npm run dev"
+                        "docker compuse up -d --build",
                     ]
                 },
                 {
-                    "name": "Server",
+                    "name": "Git",
                     "commands": [
-                        "cd server",
-                        "nodemon -e rs -x \"cargo run\""
+                        "git status",
                     ]
                 }
             ]

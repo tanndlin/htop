@@ -1,0 +1,17 @@
+services:
+    server:
+        build: ./server
+        container_name: rust-api
+        environment:
+            - API_PORT=3000
+        ports:
+            - '3000:3000'
+        pid: 'host'
+        volumes:
+            - /proc:/host_proc:ro
+
+    frontend:
+        build: ./frontend
+        container_name: frontend
+        ports:
+            - '80:80'
