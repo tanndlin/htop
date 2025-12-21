@@ -1,33 +1,14 @@
-import { useEffect, useState } from 'react';
-import CPU from '../components/CPU';
-import { fetchApi } from '../utils/fetchApi';
+import { useState } from 'react';
+import CPUUsage from '../components/CPUUsage';
+import RAMUsage from '../components/RAMUsage';
 
 const HomePage = () => {
     const [refreshRate, setRefreshRate] = useState(1000);
-    const { data, loading, error, refetch } = fetchApi<number[]>('cpus');
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refetch();
-        }, refreshRate);
-        return () => clearInterval(interval);
-    }, [refreshRate, refetch]);
-
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-    if (error) {
-        return <div>{error}</div>;
-    }
-
-    if (!data) {
-        return <div>No data available</div>;
-    }
 
     return (
-        <div className="flex flex-col gap-2 pb-4 border-2 rounded-md w-max border-secondary">
-            <header className="flex justify-between p-2 px-4 rounded-t-md bg-secondary">
-                <h1>CPU Usages</h1>
+        <main className="p-4">
+            <header className="flex gap-2 mb-4">
+                <h1>Refresh Rate</h1>
                 <select
                     name="refreshRate"
                     id="refreshRateSelect"
@@ -41,14 +22,11 @@ const HomePage = () => {
                     <option value="100">10 Hz</option>
                 </select>
             </header>
-            <div className="flex px-4">
-                <ul className="grid grid-cols-6 gap-4">
-                    {data.map((usage, index) => (
-                        <CPU key={index + 1} id={index + 1} usage={usage} />
-                    ))}
-                </ul>
+            <div className="grid grid-cols-2 gap-8 w-max">
+                <CPUUsage refreshRate={refreshRate} />
+                <RAMUsage refreshRate={refreshRate} />
             </div>
-        </div>
+        </main>
     );
 };
 

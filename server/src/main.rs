@@ -7,15 +7,21 @@ use axum::{Json, Router, extract::State, http::Method, response::IntoResponse, r
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
 use tower_http::cors::{Any, CorsLayer};
 
+use crate::types::{CpuInfo, RamInfo};
+
+mod types;
+
 #[tokio::main]
 async fn main() {
+    let sys = Arc::new(Mutex::new(System::new_all()));
+
     // build our application with a single route
-    let app = Router::new().route(
-        "/api/cpus",
-        get(get_cpu).with_state(AppState {
-            sys: Arc::new(Mutex::new(System::new_all())),
-        }),
-    );
+    let app = Router::new()
+        .route(
+            "/api/cpus",
+            get(get_cpu).with_state(AppState { sys: sys.clone() }),
+        )
+        .route("/api/ram", get(get_ram).with_state(AppState { sys }));
 
     let app = if cfg!(debug_assertions) {
         app.layer(
@@ -50,6 +56,31 @@ async fn get_cpu(State(state): State<AppState>) -> impl IntoResponse {
     thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
     sys.refresh_cpu_all();
 
-    let v: Vec<_> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
-    Json(v)
+    let cpu_usages: Vec<_> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
+
+    Json(CpuInfo { cpu_usages })
+}
+
+#[axum::debug_handler]
+async fn get_ram(State(state): State<AppState>) -> impl IntoResponse {
+    let mut sys = state.sys.lock().unwrap();
+
+    sys.refresh_memory();
+
+    let total = sys.total_memory();
+    let used = sys.used_memory();
+
+    let total_bytes = sys.total_memory();
+    let used_bytes = sys.used_memory();
+
+    let total_gb = total_bytes as f64 / 1024.0 / 1024.0 / 1024.0;
+    let used_gb = used_bytes as f64 / 1024.0 / 1024.0 / 1024.0;
+
+    println!("{:.1} GB / {:.1} GB", used_gb, total_gb);
+
+    Json(RamInfo {
+        total,
+        used,
+        free: total - used,
+    })
 }
