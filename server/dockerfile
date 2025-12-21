@@ -1,23 +1,23 @@
-# ---- build stage ----
+# ---------- builder ----------
 FROM rust:1.92 AS builder
 WORKDIR /app
 
-# 1️⃣ Copy dependency files first (for caching)
 COPY Cargo.toml Cargo.lock ./
 
-# 2️⃣ Copy source code
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+
+RUN cargo build --release
+RUN rm -rf src
+
 COPY src ./src
 
-# 3️⃣ Build release binary
 RUN cargo build --release
 
-# ---- runtime stage ----
+# ---------- runtime ----------
 FROM debian:bookworm-slim
 WORKDIR /app
 
-# Copy the binary (rename if you want)
 COPY --from=builder /app/target/release/htop /app/server
 
 EXPOSE 3000
-
 CMD ["./server"]
