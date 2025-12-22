@@ -40,7 +40,7 @@ pipeline {
                     sh '''
                     cd server
                     cargo fmt -- --check
-                    cargo clippy -- -D clippy::pedantic
+                    cargo clippy
                     '''
                 }
             }

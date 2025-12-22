@@ -3,7 +3,7 @@ use std::{
     thread,
 };
 
-use axum::{Json, Router, extract::State, http::Method, response::IntoResponse, routing::get};
+use axum::{Json, Router, extract::State, http::Method, routing::get};
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
 use tower_http::cors::{Any, CorsLayer};
 
@@ -38,8 +38,8 @@ async fn main() {
 
     // run our app with hyper, listening globally on port 3000
     let api_port = std::env::var("API_PORT").expect("API_PORT environment variable not set");
-    println!("Server running on 0.0.0.0:{}", api_port);
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", api_port))
+    println!("Server running on 0.0.0.0:{api_port}");
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{api_port}"))
         .await
         .unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -51,34 +51,26 @@ struct AppState {
 }
 
 #[axum::debug_handler]
-async fn get_cpu(State(state): State<AppState>) -> impl IntoResponse {
+async fn get_cpu(State(state): State<AppState>) -> Json<CpuInfo> {
     let mut sys = state.sys.lock().unwrap();
 
     sys.refresh_cpu_all();
     thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
     sys.refresh_cpu_all();
 
-    let cpu_usages: Vec<_> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
+    let cpu_usages: Vec<_> = sys.cpus().iter().map(sysinfo::Cpu::cpu_usage).collect();
 
     Json(CpuInfo { cpu_usages })
 }
 
 #[axum::debug_handler]
-async fn get_ram(State(state): State<AppState>) -> impl IntoResponse {
+async fn get_ram(State(state): State<AppState>) -> Json<RamInfo> {
     let mut sys = state.sys.lock().unwrap();
 
     sys.refresh_memory();
 
     let total = sys.total_memory();
     let used = sys.used_memory();
-
-    let total_bytes = sys.total_memory();
-    let used_bytes = sys.used_memory();
-
-    let total_gb = total_bytes as f64 / 1024.0 / 1024.0 / 1024.0;
-    let used_gb = used_bytes as f64 / 1024.0 / 1024.0 / 1024.0;
-
-    println!("{:.1} GB / {:.1} GB", used_gb, total_gb);
 
     Json(RamInfo {
         total,

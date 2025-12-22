@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { CpuInfo } from '../common/types';
-import { fetchApi } from '../utils/fetchApi';
+import { useFetchApi } from '../utils/fetchApi';
 import CPU from './CPU';
 
 type Props = { refreshRate: number };
@@ -8,7 +8,7 @@ type Props = { refreshRate: number };
 const CPUUsage = (props: Props) => {
     const { refreshRate } = props;
 
-    const { data, loading, error, refetch } = fetchApi<CpuInfo>('cpus');
+    const { data, loading, error, refetch } = useFetchApi<CpuInfo>('cpus');
 
     useEffect(() => {
         const interval = setInterval(() => {

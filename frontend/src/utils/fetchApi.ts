@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { API_BASE_URL } from './env';
 
-export function fetchApi<T>(endpoint: string) {
+export function useFetchApi<T>(endpoint: string) {
     const [data, setData] = useState(null as T | null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/${endpoint}`);
             if (!response.ok) {
@@ -21,15 +21,17 @@ export function fetchApi<T>(endpoint: string) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [endpoint]);
 
     const refetch = () => {
-        if (!error) fetchData();
+        if (!error) {
+            fetchData();
+        }
     };
 
     useEffect(() => {
         fetchData();
-    }, [endpoint]);
+    }, [endpoint, fetchData]);
 
     return { data, loading, error, refetch };
 }
