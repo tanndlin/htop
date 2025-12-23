@@ -8,12 +8,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = { version = "0.8.8", features = ["macros", "ws"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.146"
-sysinfo = "0.37.2"
-tokio = {version= "1.48.0", features = ["rt-multi-thread"] }
-tower-http = {version = "0.6.8", features = ["cors"]}
+axum = { version = "0.8.8", default-features = false, features = ["http1", "macros", "ws", "json"] }
+serde = { version = "1.0.228", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.146", default-features = false, features = ["std"] }
+sysinfo = { version = "0.37.2" }
+tokio = {version= "1.48.0", default-features = false, features = ["rt-multi-thread"] }
+tower-http = {version = "0.6.8", default-features = false, features = ["cors"]}
 
 [lints.clippy]
 pedantic = "warn"
