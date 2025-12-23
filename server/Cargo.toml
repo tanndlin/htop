@@ -9,11 +9,15 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.8", default-features = false, features = ["http1", "macros", "ws", "json"] }
+prost = "0.14.1"
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.146", default-features = false, features = ["std"] }
 sysinfo = { version = "0.37.2" }
 tokio = {version= "1.48.0", default-features = false, features = ["rt-multi-thread"] }
 tower-http = {version = "0.6.8", default-features = false, features = ["cors"]}
+
+[build-dependencies]
+prost-build = "0.14.1"
 
 [lints.clippy]
 pedantic = "warn"

@@ -1,24 +1,31 @@
+#[allow(clippy::all, clippy::pedantic)]
+pub mod protobuf_api {
+    include!(concat!("proto_gen", "/api.rs"));
+}
+
 use std::{
     sync::{Arc, Mutex},
     thread,
 };
 
 use axum::{
-    Json, Router,
+    Router,
     body::Bytes,
     extract::{
         State,
-        ws::{Message, WebSocket, WebSocketUpgrade},
+        ws::{Message as MessageType, WebSocket, WebSocketUpgrade},
     },
     http::Method,
     routing::get,
 };
+
+use prost::Message;
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
 use tower_http::cors::{Any, CorsLayer};
 
-use crate::types::{CpuInfo, InfoType, RamInfo, RequestMessage, ResponseData, ResponseMessage};
-
-mod types;
+use crate::protobuf_api::{
+    CpuInfo, InfoType, RamInfo, RequestMessage, ResponseMessage, response_message,
+};
 
 #[tokio::main]
 async fn main() {
@@ -27,16 +34,7 @@ async fn main() {
     let sys = Arc::new(Mutex::new(System::new_all()));
 
     // build our application with a single route
-    let app = Router::new()
-        .route(
-            "/api/cpus",
-            get(get_cpu).with_state(AppState { sys: sys.clone() }),
-        )
-        .route(
-            "/api/ram",
-            get(get_ram).with_state(AppState { sys: sys.clone() }),
-        )
-        .route("/ws", get(get_websocket).with_state(AppState { sys }));
+    let app = Router::new().route("/ws", get(get_websocket).with_state(AppState { sys }));
 
     let app = if cfg!(debug_assertions) {
         app.layer(
@@ -63,18 +61,6 @@ struct AppState {
     sys: Arc<Mutex<System>>,
 }
 
-#[axum::debug_handler]
-async fn get_cpu(State(state): State<AppState>) -> Json<CpuInfo> {
-    let mut sys = state.sys.lock().unwrap();
-    Json(get_cpu_info(&mut sys))
-}
-
-#[axum::debug_handler]
-async fn get_ram(State(state): State<AppState>) -> Json<RamInfo> {
-    let mut sys = state.sys.lock().unwrap();
-    Json(get_ram_info(&mut sys))
-}
-
 fn get_cpu_info(sys: &mut System) -> CpuInfo {
     sys.refresh_cpu_all();
     thread::sleep(MINIMUM_CPU_UPDATE_INTERVAL);
@@ -91,11 +77,7 @@ fn get_ram_info(sys: &mut System) -> RamInfo {
     let total = sys.total_memory();
     let used = sys.used_memory();
 
-    RamInfo {
-        total,
-        used,
-        free: total - used,
-    }
+    RamInfo { total, used }
 }
 
 async fn get_websocket(
@@ -108,8 +90,8 @@ async fn get_websocket(
 async fn handle_websocket(mut socket: WebSocket, state: AppState) {
     while let Some(Ok(msg)) = socket.recv().await {
         let bytes = match msg {
-            Message::Text(text) => Some(text.into()),
-            Message::Binary(bytes) => Some(bytes),
+            MessageType::Text(text) => Some(text.into()),
+            MessageType::Binary(bytes) => Some(bytes),
             e => {
                 eprintln!("Unsupported message type {e:?}");
                 None
@@ -129,20 +111,23 @@ async fn handle_websocket(mut socket: WebSocket, state: AppState) {
     }
 }
 
-fn handle_request_message_received(bytes: Bytes, sys: &Mutex<System>) -> Result<Message, String> {
-    let msg = RequestMessage::try_from(bytes)?;
+fn handle_request_message_received(
+    bytes: Bytes,
+    sys: &Mutex<System>,
+) -> Result<MessageType, String> {
+    let msg = RequestMessage::decode(bytes).map_err(|e| format!("{e}"))?;
 
     let mut sys = sys.lock().unwrap();
-    let response_data = match msg.info_type {
-        InfoType::CPU => ResponseData::CpuInfo(get_cpu_info(&mut sys)),
-        InfoType::RAM => ResponseData::RamInfo(get_ram_info(&mut sys)),
+    let response_data = match msg.info_type() {
+        InfoType::Cpu => response_message::Data::CpuInfo(get_cpu_info(&mut sys)),
+        InfoType::Ram => response_message::Data::RamInfo(get_ram_info(&mut sys)),
     };
 
-    Ok(Message::Binary(
+    Ok(MessageType::Binary(
         ResponseMessage {
-            info_type: msg.info_type,
-            data: response_data,
+            data: Some(response_data),
         }
+        .encode_to_vec()
         .into(),
     ))
 }

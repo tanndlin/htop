@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { InfoType } from '../common/types';
 import { useWebSocket } from '../contexts/WebsocketContext';
+import { api } from '../proto/api';
 import CPU from './CPU';
+import InfoType = api.InfoType;
+import RequestMessage = api.RequestMessage;
 
 type Props = { refreshRate: number };
 
@@ -22,9 +24,9 @@ const RAMUsage = (props: Props) => {
             return;
         }
 
-        sendMessage({ info_type: InfoType.RAM });
+        sendMessage(new RequestMessage({ info_type: InfoType.RAM }));
         const interval = setInterval(() => {
-            sendMessage({ info_type: InfoType.RAM });
+            sendMessage(new RequestMessage({ info_type: InfoType.RAM }));
         }, refreshRate);
         return () => clearInterval(interval);
     }, [refreshRate, ready, sendMessage]);

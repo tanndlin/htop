@@ -5,12 +5,13 @@ import {
     useEffect,
     useState
 } from 'react';
-import {
-    CpuInfo,
-    RamInfo,
-    RequestMessage,
-    ResponseMessage
-} from '../common/types';
+
+import { api } from '../proto/api';
+import CpuInfo = api.CpuInfo;
+import RamInfo = api.RamInfo;
+import RequestMessage = api.RequestMessage;
+import ResponseMessage = api.ResponseMessage;
+
 import { WEBSOCKET_URL } from '../utils/env';
 
 type WebSocketData = {
@@ -47,14 +48,14 @@ export const WebSocketProvider = ({
         };
 
         socket.onmessage = async (event) => {
-            const response: ResponseMessage = JSON.parse(
-                await (event.data as Blob).text()
+            const response: ResponseMessage = ResponseMessage.deserializeBinary(
+                new Uint8Array(await event.data.arrayBuffer())
             );
 
-            if (response.info_type === 'CPU') {
-                setCpuInfo(response.data.CpuInfo);
-            } else if (response.info_type === 'RAM') {
-                setRamInfo(response.data.RamInfo);
+            if (response.has_cpu_info) {
+                setCpuInfo(response.cpu_info);
+            } else if (response.has_ram_info) {
+                setRamInfo(response.ram_info);
             }
         };
 
@@ -73,7 +74,9 @@ export const WebSocketProvider = ({
 
     const sendMessage = useCallback(
         (message: RequestMessage) => {
-            socket?.send(JSON.stringify(message));
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(message.serialize());
+            }
         },
         [socket]
     );

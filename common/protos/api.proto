@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package api;
+
+message CpuInfo {
+  repeated float cpu_usages = 1;
+}
+
+message RamInfo {
+  uint64 total = 1;
+  uint64 used  = 2;
+}
+
+enum InfoType {
+  CPU = 0;
+  RAM = 1;
+}
+
+message RequestMessage {
+    // The number of pockets
+  InfoType info_type = 1;
+}
+
+message ResponseMessage {
+  oneof data {
+    CpuInfo cpu_info = 1;
+    RamInfo ram_info = 2;
+  }
+}
