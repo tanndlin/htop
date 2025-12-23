@@ -25,15 +25,6 @@ pipeline {
             }
         }
 
-        stage('Build Server') {
-            steps {
-                sh '''
-                cd server
-                cargo build --release
-                '''
-            }
-        }
-
         stage('Lint Server') {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
@@ -55,21 +46,12 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                sh '''
-                cd frontend
-                npm ci
-                npm run build
-                '''
-            }
-        }
-
         stage('Lint Frontend') {
             steps {
                 catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                     sh '''
                     cd frontend
+                    npm ci
                     npm run lint
                     '''
                 }
