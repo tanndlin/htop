@@ -10,7 +10,7 @@ use axum::{
         State,
         ws::{Message, WebSocket, WebSocketUpgrade},
     },
-    http::{Method, response},
+    http::Method,
     routing::get,
 };
 use sysinfo::{MINIMUM_CPU_UPDATE_INTERVAL, System};
