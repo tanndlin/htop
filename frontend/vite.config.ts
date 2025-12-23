@@ -12,6 +12,10 @@ export default defineConfig({
             '/api': {
                 target: 'http://localhost:7032', // Rust backend
                 changeOrigin: true
+            },
+            '/ws': {
+                target: 'ws://localhost:7032',
+                ws: true
             }
         }
     },
