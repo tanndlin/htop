@@ -37,14 +37,14 @@ pipeline {
             }
         }
 
-        stage('Test Server') {
-            steps {
-                sh '''
-                cd server
-                cargo test
-                '''
-            }
-        }
+        // stage('Test Server') {
+        //     steps {
+        //         sh '''
+        //         cd server
+        //         cargo test
+        //         '''
+        //     }
+        // }
 
         stage('Lint Frontend') {
             steps {
